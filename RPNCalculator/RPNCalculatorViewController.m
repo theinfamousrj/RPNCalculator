@@ -7,58 +7,45 @@
 //
 
 #import "RPNCalculatorViewController.h"
+#import "CalculatorBrain.h"
+
+@interface RPNCalculatorViewController()
+@property (nonatomic) BOOL userIsInTheMiddleOfEnteringData;
+@property (nonatomic, strong) CalculatorBrain *brain;
+@end
 
 @implementation RPNCalculatorViewController
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
+@synthesize display = _display;
+@synthesize userIsInTheMiddleOfEnteringData = _userIsInTheMiddleOfEnteringData;
+@synthesize brain = _brain;
+
+- (CalculatorBrain *)brain {
+    
+    // lazy instantiation
+    if(!_brain) _brain = [[CalculatorBrain alloc] init];
+    return _brain;
 }
 
-#pragma mark - View lifecycle
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-- (void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-	[super viewWillDisappear:animated];
-}
-
-- (void)viewDidDisappear:(BOOL)animated
-{
-	[super viewDidDisappear:animated];
-}
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
-        return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+- (IBAction)digitPressed:(UIButton *)sender {
+    NSString *digit = [sender currentTitle];
+    if(self.userIsInTheMiddleOfEnteringData) {
+        [[self display] setText:[[[self display] text] stringByAppendingString:digit]];
     } else {
-        return YES;
+        [[self display] setText:digit];
+        [self setUserIsInTheMiddleOfEnteringData:YES];
     }
 }
 
+- (IBAction)enterPressed {
+    [[self brain] pushOperand:[self.display.text doubleValue]];
+    [self setUserIsInTheMiddleOfEnteringData:NO];
+}
+
+- (IBAction)operationPressed:(UIButton *)sender {
+    if(self.userIsInTheMiddleOfEnteringData) [self enterPressed];
+    double result = [self.brain performOperation:sender.currentTitle];
+    NSString *resultString = [NSString stringWithFormat:@"%g", result];
+    self.display.text = resultString;
+}
 @end
